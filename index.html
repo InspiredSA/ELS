@@ -173,16 +173,16 @@
       </div>
       <div class="markbook-layout">
         <aside class="markbook-panel">
-          <label for="learnerNames">Learner names</label>
-          <textarea id="learnerNames" rows="8" placeholder="Paste one learner name per line"></textarea>
+          <label for="learnerNames">Student names</label>
+          <textarea id="learnerNames" rows="8" placeholder="Paste one student name per line"></textarea>
           <label class="file-label" for="classListFile">Import class list</label>
           <input id="classListFile" type="file" accept=".xlsx,.xlsm,.csv,.txt">
           <div class="button-row">
-            <button class="primary-action" id="loadLearners" type="button">Load learners</button>
+            <button class="primary-action" id="loadLearners" type="button">Load students</button>
             <button class="secondary-action" id="sampleLearners" type="button">Try sample</button>
           </div>
           <div class="markbook-controls">
-            <div><label for="commentLearner">Comment preview learner</label><select id="commentLearner"></select></div>
+            <div><label for="commentLearner">Comment preview student</label><select id="commentLearner"></select></div>
             <div><label for="commentTone">Comment style</label><select id="commentTone"><option>Warm and concise</option><option>More formal</option><option>More detailed</option></select></div>
           </div>
           <p class="privacy-note">All class information is processed in this browser. Nothing is uploaded by this page.</p>
@@ -641,7 +641,7 @@
     const secure = state.learners.reduce((sum, learner) => sum + areaDefs.filter(area => commentFor(learner, area).level === "Secure").length, 0);
     const percent = possible ? Math.round((achieved / possible) * 100) : 0;
     summary.innerHTML = [
-      ["Learners", learnerCount],
+      ["Students", learnerCount],
       ["Objectives ticked", `${achieved}/${possible}`],
       ["Completion", `${percent}%`],
       ["Secure areas", secure]
@@ -650,7 +650,7 @@
 
   function renderAreaTable(area) {
     const header = [
-      `<th>Learner</th>`,
+      `<th>Student</th>`,
       ...area.objectives.map(objective => `<th>${safeText(objective.name)}</th>`),
       `<th>Achievement</th>`
     ].join("");
@@ -672,7 +672,7 @@
 
   function renderTable() {
     if (!state.learners.length) {
-      table.innerHTML = `<div class="empty">Paste learner names, then load the class to begin marking objectives.</div>`;
+      table.innerHTML = `<div class="empty">Paste student names, then load the class to begin marking objectives.</div>`;
       return;
     }
     table.innerHTML = areaDefs.map(area => renderAreaTable(area)).join("");
@@ -682,7 +682,7 @@
     const current = commentLearner.value;
     commentLearner.innerHTML = state.learners.length
       ? state.learners.map((learner, index) => `<option value="${index}">${safeText(learner.name)}</option>`).join("")
-      : `<option value="">No learners loaded</option>`;
+      : `<option value="">No students loaded</option>`;
     if (current && Number(current) < state.learners.length) commentLearner.value = current;
   }
 
@@ -877,7 +877,7 @@
 
   function downloadWorkbook() {
     if (!state.learners.length) {
-      alert("Load at least one learner before downloading the spreadsheet.");
+      alert("Load at least one student before downloading the spreadsheet.");
       return;
     }
     const sheet = worksheetXml(rowsForExport());

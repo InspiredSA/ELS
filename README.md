@@ -2,7 +2,7 @@
 
 Interactive teacher dashboard for Early Learning School 2027 report preparation.
 
-Includes a Class Markbook workspace where teachers can paste learner names, tick
+Includes a Class Markbook workspace where teachers can paste student names, tick
 achieved objectives, generate draft Areas of Strength and The Way Forward
 comments, and download a class spreadsheet.
 
