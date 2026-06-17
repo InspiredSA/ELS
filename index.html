@@ -30,8 +30,8 @@
     select,input{width:100%;border:1px solid var(--line);border-radius:3px;padding:12px 13px;background:white;color:var(--ink);outline:none}
     select:focus,input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(22,125,115,.12)}
     .quick{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
-    .quick button{border:1px solid #d9dee5;background:#f7f8fa;color:var(--teal-dark);padding:8px 14px;border-radius:999px;font-weight:600;cursor:pointer}
-    .quick button:hover{background:var(--teal-dark);color:white;border-color:var(--teal-dark)}
+    .quick button{border:1px solid var(--area-border,#d9dee5);background:var(--area-soft,#f7f8fa);color:var(--area,#122147);padding:8px 14px;border-radius:999px;font-weight:700;cursor:pointer;transition:.18s}
+    .quick button:hover,.quick button.active{background:var(--area,#122147);color:white;border-color:var(--area,#122147);box-shadow:0 8px 20px rgba(18,33,71,.12)}
     .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0}
     .metric{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:19px;border-bottom:3px solid #d8dee7}
     .metric strong{font-family:Roboto,Helvetica,Arial,sans-serif;font-size:2rem;font-weight:300;display:block;color:var(--teal-dark)}
@@ -47,7 +47,7 @@
     .card{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:21px;display:flex;flex-direction:column;gap:13px;transition:.18s;min-width:0}
     .card:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(18,33,71,.10);border-color:#cbd2dc}
     .card-top{display:flex;justify-content:space-between;gap:10px;align-items:start}
-    .tag{background:#e9eef4;color:var(--teal-dark);padding:6px 9px;border-radius:2px;font-size:.7rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase}
+    .tag{background:var(--area-soft,#e9eef4);color:var(--area,#122147);padding:6px 9px;border-radius:2px;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
     .age{font-size:.76rem;color:var(--muted);font-weight:750;text-align:right}
     .card h3{font-family:Roboto,Helvetica,Arial,sans-serif;font-weight:400;font-size:1.3rem;line-height:1.25;margin:0}
     .statement{font-size:1rem;line-height:1.62;margin:0}
@@ -117,11 +117,37 @@
     const $ = id => document.getElementById(id);
     const state = {stage:"1", period:"Benchmarking", area:"All", search:""};
     const esc = s => String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+    const AREA_ORDER = [
+      "Wellbeing",
+      "Communication & Language",
+      "Physical Development",
+      "Literacy",
+      "Mathematics",
+      "Expressive Arts and Design",
+      "Understanding the World"
+    ];
+    const orderedAreas = () => AREA_ORDER.filter(x=>DATA.areas.includes(x)).concat(DATA.areas.filter(x=>!AREA_ORDER.includes(x)));
+    const AREA_COLOURS = {
+      "Wellbeing": {area:"#2e9aa5", soft:"#e2f4f5", border:"#9ed7dc"},
+      "Communication & Language": {area:"#a9763c", soft:"#f3e8d9", border:"#d8ba92"},
+      "Physical Development": {area:"#c74855", soft:"#f8e1e4", border:"#e5a5ac"},
+      "Literacy": {area:"#7b61a8", soft:"#ece6f5", border:"#c7b8df"},
+      "Mathematics": {area:"#dfa900", soft:"#fff2bf", border:"#f0cf48"},
+      "Expressive Arts and Design": {area:"#2f6fad", soft:"#e2edf8", border:"#9cbfe3"},
+      "Understanding the World": {area:"#57916f", soft:"#e4f1e9", border:"#a8cfb7"}
+    };
+    const areaStyle = area => {
+      const c = AREA_COLOURS[area] || {area:"#122147", soft:"#e9eef4", border:"#d9dee5"};
+      return `--area:${c.area};--area-soft:${c.soft};--area-border:${c.border}`;
+    };
     const stageSel=$("stage"),periodSel=$("period"),areaSel=$("area"),search=$("search");
     stageSel.innerHTML=DATA.stages.map(s=>`<option value="${s.stage}">Stage ${s.stage}</option>`).join("");
     periodSel.innerHTML=["Benchmarking","Term 2","Term 4"].map(x=>`<option>${x}</option>`).join("");
-    areaSel.innerHTML=`<option>All</option>`+DATA.areas.map(x=>`<option>${esc(x)}</option>`).join("");
-    $("quick").innerHTML=DATA.areas.map(x=>`<button data-area="${esc(x)}">${esc(x)}</button>`).join("");
+    areaSel.innerHTML=`<option>All</option>`+orderedAreas().map(x=>`<option>${esc(x)}</option>`).join("");
+    function renderQuickButtons(){
+      $("quick").innerHTML=orderedAreas().map(x=>`<button data-area="${esc(x)}" class="${state.area===x?"active":""}" style="${areaStyle(x)}">${esc(x)}</button>`).join("");
+    }
+    renderQuickButtons();
     $("quick").onclick=e=>{if(e.target.dataset.area){areaSel.value=e.target.dataset.area;state.area=e.target.dataset.area;render()}};
     [stageSel,periodSel,areaSel].forEach(el=>el.onchange=()=>{state.stage=stageSel.value;state.period=periodSel.value;state.area=areaSel.value;render()});
     search.oninput=()=>{state.search=search.value.trim().toLowerCase();render()};
@@ -132,6 +158,7 @@
     function render(){
       const q=state.search;
       const filtered=DATA.records.filter(r=>String(r.stage)===state.stage&&r.period===state.period&&(state.area==="All"||r.area===state.area)&&(!q||[r.area,r.category,r.statement,r.guidance,r.tips,r.overview].join(" ").toLowerCase().includes(q)));
+      renderQuickButtons();
       const checkpoint=currentCheckpoint();
       const areaCount=new Set(filtered.map(x=>x.area)).size;
       $("metricStage").textContent=`Stage ${state.stage}`;
@@ -147,7 +174,7 @@
       } else {overview.className="area-overview"; overview.innerHTML=""}
       $("cards").innerHTML=filtered.length?filtered.map(r=>`
         <article class="card">
-          <div class="card-top"><span class="tag">${esc(r.area)}</span><span class="age">Stage ${r.stage} · ${esc(r.age)}<br>${esc(r.period)}</span></div>
+          <div class="card-top"><span class="tag" style="${areaStyle(r.area)}">${esc(r.area)}</span><span class="age">Stage ${r.stage} · ${esc(r.age)}<br>${esc(r.period)}</span></div>
           <h3>${esc(r.category)}</h3>
           <p class="statement">${esc(r.statement)}</p>
           <details><summary>What achievement may look like</summary><div class="detail-block">${esc(r.guidance)}</div></details>
