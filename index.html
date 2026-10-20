@@ -343,7 +343,9 @@
     learner.ticks = learner.ticks || {};
     learner.ticks[objectiveKey(areaName, objectiveName)] = value;
     saveState();
-    render();
+    // Keep the tables mounted so marking preserves scroll position and focus.
+    renderSummary();
+    renderPreview();
   }
 
   function achievedObjectives(learner, area) {
@@ -946,7 +948,14 @@
   tone.addEventListener("change", render);
   table.addEventListener("change", event => {
     if (event.target.matches('input[type="checkbox"]')) {
-      setChecked(Number(event.target.dataset.learner), event.target.dataset.area, event.target.dataset.objective, event.target.checked);
+      const checkbox = event.target;
+      const learnerIndex = Number(checkbox.dataset.learner);
+      const area = areaDefs.find(area => area.name === checkbox.dataset.area);
+      setChecked(learnerIndex, area.name, checkbox.dataset.objective, checkbox.checked);
+      const achievement = achievementFor(area, achievedObjectives(state.learners[learnerIndex], area).length);
+      const pill = checkbox.closest("tr").querySelector(".achievement-pill");
+      pill.textContent = achievement || "Not started";
+      pill.className = `achievement-pill achievement-${achievement ? achievement.toLowerCase() : "blank"}`;
     }
   });
   render();
